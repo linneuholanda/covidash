@@ -8,6 +8,11 @@ st.title('Cenarios de Controle da Covid-19')
 
 
 WHOLE_BRASIL = "Brasil inteiro"
+########################################## my changes #############################################
+REGIONS = {"CO": ["DF", "GO", "MS", "MT"], "N": ["AC", "AM", "PA", "RO", "RR", "TO", "AP"], 
+           "NE": ["AL", "BA", "CE", "MA", "PB", "PE", "PI", "RN", "SE",], "S": ["PR", "RS", "SC"],
+           "SE": ["ES", "MG", "RJ", "SP"]}
+###################################################################################################
 PAGE_CASE_NUMBER = "Evolução do Número de Casos"
 
 COLUMNS = {
@@ -89,9 +94,9 @@ def main():
         if uf_option != WHOLE_BRASIL:
             cities = get_city_list(data, uf_option)
             city_option = st.selectbox("Selecione o Município", ["Todos"] + cities)
-
+        
         data_uf = get_data_uf(data, uf_option, city_option)
-
+#(data, uf, city_option)
         st.line_chart(data_uf, height=400)
 
 
@@ -111,14 +116,31 @@ def get_data():
 
 
 @st.cache
-def get_data_uf(data, uf, city_option):
-    if uf != WHOLE_BRASIL:
-        data = data.loc[data.state == uf]
-        if city_option and city_option != "Todos":
-            data = data.loc[data.city == city_option]
-
+def get_data_uf(data, uf=None, city_option=None):
+    if uf:
+        data = data.loc[(data.state==uf)&(data.place_type=="state"),:]
+    if city_option:
+        data = data.loc[(data.city==city_option)&(data.place_type=="city"),:]
+    else:
+        data = data.loc[data.place_type=="state",:]
     return data.groupby("date")["Casos Confirmados"].sum()
 
+@st.cache
+def get_data_region(data, region=None, uf=None, city_option=None):
+    if region:
+        if "region" not in data.columns:
+            column_ix = cases.columns.get_loc("date")+1
+        cases.insert(loc= column_ix,column="region",value=np.nan)
+        for ix,s in enumerate(cases.state):
+            cases.iloc[ix:,column_ix] = state_to_regions_dict[s]
+        data = data.loc[(data.region == region)&(data.place_type=="state"),:]
+    if uf:
+        data = data.loc[(data.state==uf)&(data.place_type=="state"),:]
+    if city_option:
+        data = data.loc[(data.city==city)&(data.place_type=="city"),:]
+    else:
+        data = data.loc[data.place_type=="state",:] # get from the whole country
+    return data.groupby("date")["Casos Confirmados"].sum()
 
 @st.cache
 def get_city_list(data, uf):
