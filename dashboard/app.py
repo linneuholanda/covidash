@@ -8,10 +8,15 @@ import dashboard_data
 import dashboard_models
 st.title('Cenarios de Controle da Covid-19')
 
-
 WHOLE_BRASIL = "Brasil inteiro"
+
+### Main menu goes here
+HOME = "Home"
+MODELS = "Modelos"
+DATA = "Dados"
 PAGE_CASE_NUMBER = "Evolução do Número de Casos"
 CUM_CASE_COUNT = "Casos acumulados a partir de 100"
+CUM_DEATH_COUNT  = "Mortes acumuladas"
 
 COLUMNS = {
     "A": "Assintomáticos",
@@ -36,11 +41,11 @@ logo = Image.open('dashboard/logo_peq.png')
 
 def main():
     st.sidebar.image(logo, use_column_width=True)
-    page = st.sidebar.selectbox("Escolha um Painel", ["Home",  "Modelos", "Dados", PAGE_CASE_NUMBER, CUM_CASE_COUNT])
-    if page == "Home":
+    page = st.sidebar.selectbox("Escolha um Painel", [HOME,  MODELS, DATA, PAGE_CASE_NUMBER, CUM_CASE_COUNT,                                                                   CUM_DEATH_COUNT])
+    if page == HOME:
         st.header("Dashboard COVID-19")
         st.write("Escolha um painel à esquerda")
-    elif page == 'Modelos':
+    elif page == MODELS:
         st.title("Explore a dinâmica da COVID-19")
         st.sidebar.markdown("### Parâmetros do modelo")
         chi = st.sidebar.slider('χ, Fração de asintomáticos', 0.0, 1.0, 0.3)
@@ -85,7 +90,7 @@ $\frac{dR}{dt}= \delta I +\delta H + \delta A$
 $\lambda=\beta(I+A+(1-\rho)H)$
         """)
 
-    elif page == "Dados":
+    elif page == DATA:
         st.title('Probabilidade de Epidemia por Município')
         probmap = Image.open('dashboard/Outbreak_probability_full_mun_2020-04-06.png')
         st.image(probmap, caption='Probabilidade de Epidemia em 6 de abril',
@@ -131,6 +136,25 @@ $\lambda=\beta(I+A+(1-\rho)H)$
         #data_uf = data_uf[data_uf>=100] if is_aligned else data_uf
         data_uf = np.log(data_uf + 1) if is_log else data_uf
         st.line_chart(data_uf, height=400)
+
+    elif page==CUM_DEATH_COUNT:
+        st.title(CUM_DEATH_COUNT)
+        data = dashboard_data.get_data()
+        ufs = sorted(list(data.state.drop_duplicates().values))
+        uf_option = st.multiselect("Selecione o Estado", ufs)
+        city_options = None
+        if uf_option:
+            cities = dashboard_data.get_city_list(data, uf_option)
+            city_options = st.multiselect("Selecione os Municípios", cities)
+        is_log = st.checkbox('Escala Logarítmica', value=False)
+        #is_aligned = st.checkbox("Alinhar por primeiros 100 casos",value=False)
+        data_uf = dashboard_data.get_deaths(data, uf_option, city_options)
+        #print(data_uf)
+        #data_uf = dashboard_data.get_deaths(data_uf,align=100)
+        #data_uf = data_uf[data_uf>=100] if is_aligned else data_uf
+        data_uf = np.log(data_uf + 1) if is_log else data_uf
+        st.line_chart(data_uf, height=400)
+        
 
 if __name__ == "__main__":
     main()
