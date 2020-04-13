@@ -10,8 +10,10 @@ Professor de Epidemiologia Matemática da Escola de matemática Aplicada da FGV.
 **Rhenan Bartels** 
 
 
-![Linneu](https://www.gravatar.com/avatar/)
+![Linneu](https://s.gravatar.com/avatar/0340f8d4f0b27e79494ebf446cd93595?s=80)
 **Nicolaus Linneu** 
+
+Pesquisador de pós-doutorado no Centro Brasileiro de Pesquisas Físicas
 
 ![Nahum](https://www.gravatar.com/avatar/)
 **Nahum Sá** 
