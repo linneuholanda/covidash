@@ -186,44 +186,49 @@ Considerando o fluxo de indivíduos (infectados) que chega em um município em u
 ainda não estejam em transmissão comunitária, podemos calcular a probabilidade de uma epidemia se estabelecer.
 Esta probabilidade é dada por esta fórmula:
 
-$$P_{epi}=1-\left(\frac{1}{R_0}\right)^{I_0}$$,
+$$P_{epi}=1-\left(\frac{1}{R_deaths_pneumonia_2020 	deaths_covid19 	deaths_respiratory_failure_2020 	0}\right)^{I_0}$$,
 
 onde $I_0$ é o número de infectados chegando diáriamente no município. Neste cenário usamos um $R_0=2.5$.
         ''')
 
     elif page == CASES_BR:
         st.title(CASES_BR)
-        datasets_dict = {"BRASIL_IO_COVID19":{"source":dashboard_data.BRASIL_IO_COVID19,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None},
-                         "BRASIL_IO_CART":{"source":dashboard_data.BRASIL_IO_CART,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None}
+        datasets_dict = {"BRASIL_IO_COVID19":{"source":dashboard_data.BRASIL_IO_COVID19,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None, "visualization_cols":["confirmed", "deaths", "confirmed_per_100k_inhabitants", "death_rate"]},
+                         "BRASIL_IO_CART":{"source":dashboard_data.BRASIL_IO_CART,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None,
+"visualization_cols":["deaths_pneumonia_2020", "deaths_covid19", "deaths_respiratory_failure_2020"]}
                         }
         cases_br = dashboard_classes.timeseries_visualization(datasets_dict)
-        
-        
+        dataset_options = st.multiselect("Selecione o data set: ", cases_br.datasets) 
+        if dataset_options:
+            visualizations = st.multiselect("Escolha a série histórica: ", cases_br.get_visualization_options(dataset_options))
+        #visualization_options = st.multiselect(cases_br.datasets_dict[dataset_option][visualization_columns])
+        state_options = cases_br.apply_filter(visualizations,["state","city"]) #### code this!!!!!!!!!!!
+        ####### Last line above!!!! continue from here!!!!!
         x_variable = "date"
         y_variable = "Casos Confirmados"
         y_variable2 = "Mortes Acumuladas"
 
-        data = dashboard_data.get_data()
-        ufs = sorted(list(data.state.drop_duplicates().values))
-        uf_option = st.multiselect("Selecione o Estado", ufs)
+        #data = dashboard_data.get_data()
+        #ufs = sorted(list(data.state.drop_duplicates().values))
+        #uf_option = st.multiselect("Selecione o Estado", ufs)
 
-        city_options = None
+        #city_options = None
 
-        if uf_option:
-            cities = dashboard_data.get_city_list(data, uf_option)
-            city_options = st.multiselect("Selecione os Municípios", cities)
+        #if uf_option:
+        #    cities = dashboard_data.get_city_list(data, uf_option)
+        #    city_options = st.multiselect("Selecione os Municípios", cities)
 
-        is_log = st.checkbox('Escala Logarítmica', value=False)
-        region_name, data_uf_confirmed = dashboard_data.get_data_uf(data, uf_option, city_options, y_variable)
-        region_name, data_uf_deaths = dashboard_data.get_data_uf(data, uf_option, city_options, y_variable2)
+        #is_log = st.checkbox('Escala Logarítmica', value=False)
+        #region_name, data_uf_confirmed = dashboard_data.get_data_uf(data, uf_option, city_options, y_variable)
+        #region_name, data_uf_deaths = dashboard_data.get_data_uf(data, uf_option, city_options, y_variable2)
 
-        figure = dashboard_data.plot_series(data_uf_confirmed, x_variable, y_variable, region_name, is_log)
-        figure = dashboard_data.add_series(figure, data_uf_deaths, x_variable, y_variable2, region_name, is_log)
+        #figure = dashboard_data.plot_series(data_uf_confirmed, x_variable, y_variable, region_name, is_log)
+        #figure = dashboard_data.add_series(figure, data_uf_deaths, x_variable, y_variable2, region_name, is_log)
 
-        st.plotly_chart(figure)
+        #st.plotly_chart(figure)
 
-        st.markdown("**Fonte**: [brasil.io](https://brasil.io/dataset/covid19/caso)")
-        dashboard_data.plot_scatter_CFR(data)
+        #st.markdown("**Fonte**: [brasil.io](https://brasil.io/dataset/covid19/caso)")
+        #dashboard_data.plot_scatter_CFR(data)
 
 
     elif page == CUM_DEATH_COUNT_BR:
