@@ -26,6 +26,10 @@ MAIN_MENU = [HOME,MODELS,DATA,MAPA,CREDITOS,CASES_BR,CASES_WORLD]
 #CUM_DEATH_CART = "Mortes registradas em cartório"
 #PAGE_GLOBAL_CASES = "Casos no Mundo"
 
+### Data sources
+BRASIL_IO_COVID19 = "https://brasil.io/dataset/covid19/caso?format=csv"
+BRASIL_IO_CART = "https://brasil.io/dataset/covid19/obito_cartorio?format=csv"
+
 COLUMNS = {
     "A": "Assintomáticos",
     "S": "Suscetíveis",
@@ -193,16 +197,27 @@ onde $I_0$ é o número de infectados chegando diáriamente no município. Neste
 
     elif page == CASES_BR:
         st.title(CASES_BR)
-        datasets_dict = {"BRASIL_IO_COVID19":{"source":dashboard_data.BRASIL_IO_COVID19,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None, "visualization_cols":["confirmed", "deaths", "confirmed_per_100k_inhabitants", "death_rate"]},
-                         "BRASIL_IO_CART":{"source":dashboard_data.BRASIL_IO_CART,"index_col":None,"usecols":None,"to_datetime":True, "renamecols":None,
-"visualization_cols":["deaths_pneumonia_2020", "deaths_covid19", "deaths_respiratory_failure_2020"]}
-                        }
-        cases_br = dashboard_classes.timeseries_visualization(datasets_dict)
-        dataset_options = st.multiselect("Selecione o data set: ", cases_br.datasets) 
-        if dataset_options:
-            visualizations = st.multiselect("Escolha a série histórica: ", cases_br.get_visualization_options(dataset_options))
-        #visualization_options = st.multiselect(cases_br.datasets_dict[dataset_option][visualization_columns])
-        state_options = cases_br.apply_filter(visualizations,["state","city"]) #### code this!!!!!!!!!!!
+        ### Loading datasets
+        datasets = {"BRASIL_IO_COVID19": dashboard_classes.dataset(name="BRASIL_IO_COVID19", source=BRASIL_IO_COVID19,                                                                              read_csv_kw={}),
+                    "BRASIL_IO_CART": dashboard_classes.dataset(name="BRASIL_IO_CART", source=BRASIL_IO_CART,                                                                                      read_csv_kw={}),
+                   }
+        ### Adding visualizations to datasets
+        # BRASIL_IO_COVID19 dataset
+        datasets["BRASIL_IO_COVID19"].add_timeseries_visualization(vis_name="Casos confirmados",yvar="confirmed",xvar="date",filters=None)
+        datasets["BRASIL_IO_COVID19"].add_timeseries_visualization(vis_name="Mortes confirmadas", yvar="deaths", xvar="date",                                                                   filters=None)
+        # BRASIL_IO_CART dataset
+        datasets["BRASIL_IO_CART"].add_timeseries_visualization(vis_name="Mortes Covid 2019", yvar="deaths_covid19", xvar="date",                                                              filters=None)
+        datasets["BRASIL_IO_CART"].add_timeseries_visualization(vis_name="Mortes por pneumonia em 2020", yvar="deaths_pneumonia_2020",                                                          xvar="date", filters=None)
+        ### Adding visualizations to datasets
+        cases_br = dashboard_classes.menu_tag(datasets)
+        dataset_menu = None
+        dataset_menu = st.multiselect("Selecione o data set: ", cases_br.get_list_of_datasets())
+        visualizations = {}
+        if dataset_menu:
+            visualization_menu = st.multiselect("Selecione a visualização: ", cases_br.get_visualization_menu(dataset_menu))
+        #visualizations = st.multiselect("Escolha a série histórica: ", cases_br.get_visualization_options(dataset_options))
+        ### Getting state options
+        #state_options = cases_br.apply_filter(visualizations,["state","city"]) #### code this!!!!!!!!!!!
         ####### Last line above!!!! continue from here!!!!!
         x_variable = "date"
         y_variable = "Casos Confirmados"

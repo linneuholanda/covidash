@@ -44,39 +44,83 @@ from dashboard_models import seqiahr_model
 #    "Mortes Acumuladas"
 #]
 
-class timeseries_visualization:
+class dataset:
+    """
+    This class condenses information available for a particular data set
+    """
+    def __init__(self,name, source, read_csv_kw={}):
+        self.name = name
+        self.source = source
+        read_csv_kw["filepath_or_buffer"] = source
+        self.dataframe = pd.read_csv(**read_csv_kw)
+        self.timeseries_visualizations = {}
+        
+    def add_timeseries_visualization(self,vis_name,yvar,xvar,filters=None):
+        """
+        Defines dictionaries for visualization
+        """
+        self.timeseries_visualizations[vis_name] = {}
+        self.timeseries_visualizations[vis_name]["yvar"] = yvar
+        self.timeseries_visualizations[vis_name]["xvar"] = xvar
+        self.timeseries_visualizations[vis_name]["filters"] = filters
+    
+    def get_timeseries_visualizations(self):
+        return self.timeseries_visualizations
+        
+class menu_tag:
     """ 
     This class encapsulates visualizations of number of cases, number of deaths and similar visualizations.
     """
-    def __init__(self, datasets_dict):
+    def __init__(self, datasets):
         """
         inputs
         ------
         dataset_dict: a dictionary specifying the data sets to be used {dataset_name: {source: , index_col: , usecols: ,  parse_dates: ,      renamecols: , visualization_cols: }}
         """
-        self.datasets_dict = datasets_dict
-        self.datasets = list(datasets_dict.keys())
-        self.figure = None
-        self.dataframes = {}
-        for ds_name, ds_dict in self.datasets_dict.items():
-            source, index_col, usecols, parse_dates, renamecols, visualization_cols = ds_dict.values()
-            df = pd.read_csv(source,index_col=index_col,usecols=usecols,parse_dates=parse_dates)
-            if renamecols is not None:
-                if renamecols == "dataset_name":
-                    renamecols = {c: ds_name+"_"+c for c in df.columns}
-                df.rename(columns=renamecols)
-            self.dataframes[ds_name] = df
-   
+        self.datasets = datasets
+        #self.datasets = list(datasets_dict.keys())
+        #self.figure = None
+        #self.dataframes = {}
+        #for ds_name, ds_dict in self.datasets_dict.items():
+        #    source, index_col, usecols, parse_dates, renamecols, visualization_cols = ds_dict.values()
+        #    df = pd.read_csv(source,index_col=index_col,usecols=usecols,parse_dates=parse_dates)
+        #    if renamecols is not None:
+        #        if renamecols == "dataset_name":
+        #            renamecols = {c: ds_name+"_"+c for c in df.columns}
+        #        df.rename(columns=renamecols)
+        #    self.dataframes[ds_name] = df
+        #self.visualizations = None
+    
+    def get_list_of_datasets(self):
+        return list(self.datasets.keys())
+    
+    def add_dataset_visualization(self,dataset_name,visualization_name,y_variable,x_variable,filters=None):
+        ds = self.datasets[dataset_name]
+        ds.add_visualization(visualization_name,y_variable,x_variable,filters)
+        
     @st.cache(ttl=settings.CACHE_TTL)
-    def get_visualization_options(self,dataset_options):
-        visualization_options = []
-        for dataset in dataset_options:
-            for col in self.datasets_dict[dataset]["visualization_cols"]:
-                visualization_options.append(dataset + " - " + col) 
-        return visualization_options
+    def get_visualization_menu(self,dataset_names):
+        visualization_menu = []
+        for ds_name in dataset_names:
+            ds = self.datasets[ds_name]
+            for vis_name in ds.get_timeseries_visualizations():
+                visualization_menu.append(ds_name + " - " + vis_name) 
+        #self.visualization_options = visualization_options 
+        return visualization_menu
+
     
-    def apply_filters(self,filter_columns)
+    @st.cache(ttl=settings.CACHE_TTL)
+    def __get_visualization_menu(self):
+        visualization_menu = []
+        for ds_name, ds in self.datasets.items():
+            for vis_name in ds.get_visualizations():
+                visualization_menu.append(ds_name + " - " + vis_name) 
+        #self.visualization_options = visualization_options 
+        return visualization_menu
     
+    def get_menu_for_variable(self,visualization_menu,variable):
+        #df_name = 
+        pass
         
     def plot_series():
         pass
