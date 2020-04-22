@@ -208,20 +208,33 @@ onde $I_0$ é o número de infectados chegando diáriamente no município. Neste
         # BRASIL_IO_CART dataset
         datasets["BRASIL_IO_CART"].add_timeseries_visualization(vis_name="Mortes Covid 2019", yvar="deaths_covid19", xvar="date",                                                              filters=None)
         datasets["BRASIL_IO_CART"].add_timeseries_visualization(vis_name="Mortes por pneumonia em 2020", yvar="deaths_pneumonia_2020",                                                          xvar="date", filters=None)
-        ### Adding visualizations to datasets
+        ### Creating menu tag object
         cases_br = dashboard_classes.menu_tag(datasets)
-        dataset_menu = None
-        dataset_menu = st.multiselect("Selecione o data set: ", cases_br.get_list_of_datasets())
-        visualizations = {}
-        if dataset_menu:
-            visualization_menu = st.multiselect("Selecione a visualização: ", cases_br.get_visualization_menu(dataset_menu))
+        figure=None 
+        chosen_datasets = None
+        chosen_visualizations = None
+        chosen_states = None
+        cases_br.choose_dataset(st.multiselect("Selecione o data set: ", cases_br.get_list_of_datasets()))
+        if cases_br.chosen_datasets:
+            cases_br.choose_timeseries_visualization(st.multiselect("Selecione a visualização: ", cases_br.get_timeseries_visualization_menu(dataset_menu))
+        if visualization_menu:
+            state_menu = st.multiselect("Selecione o estado: ", cases_br.get_menu_from_column("BRASIL_IO_COVID19","state"))
+        if state_menu:
+            for dataset_name in dataset_menu:
+                ds = cases_br.datasets[dataset_name]
+                for vis_name in ds.timeseries_visualizations:
+                    if figure is None:
+                        figure = ds.plot_timeseries(vis_name,px_scatter_kw={})    
+        if figure is not None:
+            st.plotly_chart(figure)            
+        
         #visualizations = st.multiselect("Escolha a série histórica: ", cases_br.get_visualization_options(dataset_options))
         ### Getting state options
         #state_options = cases_br.apply_filter(visualizations,["state","city"]) #### code this!!!!!!!!!!!
         ####### Last line above!!!! continue from here!!!!!
-        x_variable = "date"
-        y_variable = "Casos Confirmados"
-        y_variable2 = "Mortes Acumuladas"
+        #x_variable = "date"
+        #y_variable = "Casos Confirmados"
+        #y_variable2 = "Mortes Acumuladas"
 
         #data = dashboard_data.get_data()
         #ufs = sorted(list(data.state.drop_duplicates().values))

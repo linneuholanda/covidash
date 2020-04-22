@@ -10,6 +10,7 @@ import settings
 import dashboard_models
 import dashboard_data
 from dashboard_models import seqiahr_model
+import plotly.express as px
 
 #@st.title('A Matemática da Covid-19')
 
@@ -66,7 +67,57 @@ class dataset:
     
     def get_timeseries_visualizations(self):
         return self.timeseries_visualizations
-        
+    
+    @st.cache(ttl=settings.CACHE_TTL)
+    def get_unique_elements_from_column(self,column):
+        unique_elements = self.dataframe.loc[:,column].drop_duplicates(keep="first")
+        return unique_elements
+    
+    def plot_timeseries(self,vis_name,px_scatter_kw={}):
+        data = self.dataframe.copy()
+        #if is_log:
+        #    #data = data.copy()
+        #    log_y_variable = f"Log[{y_variable}]"
+        #    data[log_y_variable] = np.log(data[y_variable] + 1)
+        #    y_variable = log_y_variable
+        px_scatter_kw["data_frame"] = data
+        px_scatter_kw["x"], px_scatter_kw["y"] = self.timeseries_visualizations[vis_name]["xvar"],                                                                                self.timeseries_visualizations[vis_name]["yvar"]
+        fig = px.scatter(**px_scatter_kw)#, color=region_name)    
+        fig.update_traces(mode='lines+markers')
+        fig.update_layout(xaxis_title="Data", yaxis_title="Indivíduos",plot_bgcolor='rgba(0,0,0,0)', legend_orientation="h")
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='rgb(211,211,211)',showline=True, linewidth=1, linecolor='black')
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgb(211,211,211)',showline=True, linewidth=1, linecolor='black')
+    
+        return fig
+    
+    
+#def plot_series(data, x_variable, y_variable, region_name, is_log):
+#    if is_log:
+#        data = data.copy()
+#        log_y_variable = f"Log[{y_variable}]"
+#        data[log_y_variable] = np.log(data[y_variable] + 1)
+#        y_variable = log_y_variable
+#
+#    fig = px.scatter(data, x=x_variable, y=y_variable, color=region_name)    
+#    
+#    fig.update_traces(mode='lines+markers')
+#    fig.update_layout(
+#        xaxis_title="Data",
+#        yaxis_title="Indivíduos",
+#        plot_bgcolor='rgba(0,0,0,0)',
+#        legend_orientation="h",        
+#    )
+#    fig.update_xaxes(
+#        showgrid=True, gridwidth=1, gridcolor='rgb(211,211,211)',
+#        showline=True, linewidth=1, linecolor='black',
+#    )
+#    fig.update_yaxes(
+#        showgrid=True, gridwidth=1, gridcolor='rgb(211,211,211)',
+#        showline=True, linewidth=1, linecolor='black',
+#    )
+#    
+#    return fig
+#        
 class menu_tag:
     """ 
     This class encapsulates visualizations of number of cases, number of deaths and similar visualizations.
@@ -90,7 +141,12 @@ class menu_tag:
         #        df.rename(columns=renamecols)
         #    self.dataframes[ds_name] = df
         #self.visualizations = None
+        self.chosen_datasets = None
+        self.chosen_timeseries_visualizations = {}
     
+    @st.cache(ttl=settings.CACHE_TTL)
+    def choose_dataset(self,chosen_datasets):
+        self.chosen_datasets = chosen_datasets
     def get_list_of_datasets(self):
         return list(self.datasets.keys())
     
@@ -99,7 +155,7 @@ class menu_tag:
         ds.add_visualization(visualization_name,y_variable,x_variable,filters)
         
     @st.cache(ttl=settings.CACHE_TTL)
-    def get_visualization_menu(self,dataset_names):
+    def get_timeseries_visualization_menu(self,dataset_names):
         visualization_menu = []
         for ds_name in dataset_names:
             ds = self.datasets[ds_name]
@@ -107,7 +163,14 @@ class menu_tag:
                 visualization_menu.append(ds_name + " - " + vis_name) 
         #self.visualization_options = visualization_options 
         return visualization_menu
-
+    
+    @st.cache(ttl=settings.CACHE_TTL)
+    def get_menu_from_column(self,dataset_name, column):
+        ds = self.datasets[dataset_name]
+        menu_from_column = ds.get_unique_elements_from_column(column).values
+        #print("type: ", type(menu_from_column))
+        #menu_from_column = ["a", "b", "c"]
+        return menu_from_column
     
     @st.cache(ttl=settings.CACHE_TTL)
     def __get_visualization_menu(self):
